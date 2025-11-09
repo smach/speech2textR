@@ -1,0 +1,140 @@
+1
+00:00:00,800 --> 00:00:04,440
+[Speaker A] Welcome, everyone, to this second E round
+
+2
+00:00:04,440 --> 00:00:07,240
+[Speaker A] profile. I'm Riccardo Rossi and I'm here,
+
+3
+00:00:07,240 --> 00:00:09,200
+[Speaker A] as usual, with Federico Marini. Hi,
+
+4
+00:00:09,200 --> 00:00:13,760
+[Speaker A] Federico, how are you? And today our guest
+
+5
+00:00:13,920 --> 00:00:17,400
+[Speaker A] is Sharon Machlis. Hi, Sharon, how are
+
+6
+00:00:17,400 --> 00:00:17,680
+[Speaker A] you?
+
+7
+00:00:18,160 --> 00:00:19,360
+[Speaker B] Hi. Nice to see you.
+
+8
+00:00:19,680 --> 00:00:24,560
+[Speaker A] Okay. Sharon is director of Editorial Data
+
+9
+00:00:24,560 --> 00:00:28,350
+[Speaker A] and Analytics at IDG Communication, and
+
+10
+00:00:28,350 --> 00:00:31,950
+[Speaker A] she's also author of Practical R for Mass
+
+11
+00:00:31,950 --> 00:00:34,790
+[Speaker A] Communication and Journalism. Did I say it
+
+12
+00:00:34,790 --> 00:00:35,630
+[Speaker A] right, Sharon?
+
+13
+00:00:35,710 --> 00:00:36,990
+[Speaker B] Yes, you did. Thank you.
+
+14
+00:00:37,310 --> 00:00:39,990
+[Speaker A] Okay, great. Great to have you here
+
+15
+00:00:39,990 --> 00:00:42,590
+[Speaker A] chatting with us. And she's also, of
+
+16
+00:00:42,590 --> 00:00:45,990
+[Speaker A] course, one of the ERA 2020 keynote
+
+17
+00:00:45,990 --> 00:00:47,910
+[Speaker A] speakers for the virtual conference in
+
+18
+00:00:47,910 --> 00:00:51,270
+[Speaker A] June. So my first question is, does
+
+19
+00:00:51,270 --> 00:00:54,410
+[Speaker A] journalism need to be data? Journalism
+
+20
+00:00:54,730 --> 00:00:58,250
+[Speaker A] needs to be data driven today. Or let's
+
+21
+00:00:58,250 --> 00:01:01,930
+[Speaker A] say at least to what extent and what role
+
+22
+00:01:01,930 --> 00:01:03,050
+[Speaker A] for R in this?
+
+23
+00:01:04,090 --> 00:01:06,730
+[Speaker B] Yeah, some does and some doesn't. You
+
+24
+00:01:06,730 --> 00:01:08,969
+[Speaker B] know, every story doesn't need to have
+
+25
+00:01:08,969 --> 00:01:10,890
+[Speaker B] data, but a lot of stories need to have
+
+26
+00:01:10,890 --> 00:01:13,530
+[Speaker B] data. And good data. Journalists
+
+27
+00:01:13,530 --> 00:01:15,930
+[Speaker B] understand that the data isn't the whole
+
+28
+00:01:15,930 --> 00:01:17,690
+[Speaker B] story. You still want to talk to people
+
+29
+00:01:17,690 --> 00:01:20,570
+[Speaker B] and get context and get what we call color
+
+30
+00:01:20,730 --> 00:01:22,170
+[Speaker B] and, you know, quotes from people.
+
+31
+00:01:22,250 --> 00:01:24,570
+[Speaker B] Understanding how the data affects people.
+
+32
+00:01:24,970 --> 00:01:26,770
+[Speaker B] That's the difference between journalism
+
+33
+00:01:26,770 --> 00:01:29,330
+[Speaker B] and just data analysis. But there is an
+
+34
+00:01:29,330 --> 00:01:31,330
+[Speaker B] awful lot of journalism where having the
+
+35
+00:01:31,330 --> 00:01:33,770
+[Speaker B] data really makes your story stronger.
+

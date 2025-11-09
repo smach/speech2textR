@@ -1,0 +1,144 @@
+1
+00:00:00,740 --> 00:00:03,919
+[speaker_0] Welcome, everyone, uh, to this, uh, second
+
+2
+00:00:04,000 --> 00:00:07,000
+[speaker_0] IRAM profile. I'm Ricardo Rossi and I'm
+
+3
+00:00:07,059 --> 00:00:09,159
+[speaker_0] here as usual with Federico Marini. Hi,
+
+4
+00:00:09,179 --> 00:00:10,079
+[speaker_0] Federico.
+
+5
+00:00:10,119 --> 00:00:10,619
+[speaker_1] Hi.
+
+6
+00:00:11,139 --> 00:00:15,219
+[speaker_0] And today, uh, our guest is Sharon
+
+7
+00:00:15,479 --> 00:00:17,739
+[speaker_0] Machlis. Hi, Sharon. How are you?
+
+8
+00:00:18,299 --> 00:00:19,699
+[speaker_2] Hi, nice to see you.
+
+9
+00:00:19,760 --> 00:00:23,579
+[speaker_0] Okay. Sharon, uh, is a- is director of
+
+10
+00:00:23,659 --> 00:00:26,779
+[speaker_0] editorial data and analytics at IDG
+
+11
+00:00:27,079 --> 00:00:30,219
+[speaker_0] Communication, and she's also author of
+
+12
+00:00:30,359 --> 00:00:32,819
+[speaker_0] Practical R for Mass Communication and
+
+13
+00:00:33,180 --> 00:00:35,500
+[speaker_0] Journalisms. Did I say it right, Sharon?
+
+14
+00:00:35,840 --> 00:00:36,979
+[speaker_2] Yes, you did. Thank you.
+
+15
+00:00:37,380 --> 00:00:39,959
+[speaker_0] Okay, great. Great to have you here
+
+16
+00:00:40,059 --> 00:00:42,479
+[speaker_0] chatting with us. And she's also, of
+
+17
+00:00:42,559 --> 00:00:45,840
+[speaker_0] course, one of the IRAM 2020 keynote
+
+18
+00:00:45,900 --> 00:00:47,819
+[speaker_0] speakers for the virtual conference in
+
+19
+00:00:47,899 --> 00:00:51,279
+[speaker_0] June. So my first question is, does
+
+20
+00:00:51,419 --> 00:00:54,560
+[speaker_0] journalisms need to be... data journalisms
+
+21
+00:00:54,919 --> 00:00:58,220
+[speaker_0] needs to be data-driven today, or let's
+
+22
+00:00:58,239 --> 00:01:01,700
+[speaker_0] say, at least to what extent? And what
+
+23
+00:01:01,779 --> 00:01:04,180
+[speaker_0] role for R in this?
+
+24
+00:01:04,260 --> 00:01:06,680
+[speaker_2] Yeah, some does and some doesn't. You
+
+25
+00:01:06,720 --> 00:01:09,000
+[speaker_2] know, every story doesn't need to have
+
+26
+00:01:09,059 --> 00:01:10,900
+[speaker_2] data, but a lot of stories need to have
+
+27
+00:01:10,959 --> 00:01:14,339
+[speaker_2] data. And good data journalists understand
+
+28
+00:01:14,400 --> 00:01:16,459
+[speaker_2] that the data isn't the whole story. You
+
+29
+00:01:16,540 --> 00:01:18,819
+[speaker_2] still wanna talk to people and get context
+
+30
+00:01:18,900 --> 00:01:21,299
+[speaker_2] and get what we call color, you know,
+
+31
+00:01:21,379 --> 00:01:23,279
+[speaker_2] quotes from people, understanding how the
+
+32
+00:01:23,319 --> 00:01:25,720
+[speaker_2] data affects people. That's the difference
+
+33
+00:01:25,779 --> 00:01:28,739
+[speaker_2] between journalism and just data analysis.
+
+34
+00:01:28,759 --> 00:01:30,559
+[speaker_2] But there's an awful lot of journalism
+
+35
+00:01:30,619 --> 00:01:32,679
+[speaker_2] where having the data really makes your
+
+36
+00:01:32,739 --> 00:01:34,079
+[speaker_2] story stronger.
+

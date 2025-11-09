@@ -1,0 +1,101 @@
+## Introduction
+
+My key motivation for this package: One of my nieces is Deaf, and works as a psychologist at a local school for the Deaf. I do not want to post social media or other videos without captions! There are a lot of good LLMs for converting speech to text, and I wanted to include a couple in my R workflow. I also wanted a way to make it easier to compare a closed caption file with the original video and edit in place.
+
+This package includes R wrappers for two speech-to-text APIs: [ElevenLabs](https://elevenlabs.io/speech-to-text) and [AssemblyAI](https://www.assemblyai.com/playground). (I also like the local [Vibe](https://thewh1teagle.github.io/vibe/) app for some one-off transcriptions, but that's separate from an R workflow.)
+
+I think the ElevenLabs API is slightly better, but it is more expensive. In addition, I haven't gotten the async processing to work yet, so you may have problems trying to process larger files.
+
+The `edit_subtitles_standalone("your_video.mp4", "your_subtitles.srt")` function launches a Node.js app that lets you watch your video on the left and edit the caption file on the right. You need node.js installed on your local computer for the editing app to work.
+
+Note that this package is doing what I want it to do, but I haven't tested out all the functionality. You're welcome to use it too, but use at your own risk!
+
+## Setup
+
+Install the package from GitHub, for example:
+
+```
+# Install from GitHub
+remotes::install_github("smach/speech2textR", build_vignettes = TRUE)
+```
+
+Load the package:
+
+```
+library(speech2textR)
+```
+
+You'll need accounts and API keys for whichever transcription API you want to use - [ElevenLabs]((https://elevenlabs.io/docs/quickstart)), [AssemblyAI](https://www.assemblyai.com/docs/getting-started/transcribe-an-audio-file), or both.
+
+## Usage
+
+### Getting transcriptions
+
+You can use either API to transcribe audio or video files:
+
+```
+# ElevenLabs API
+transcript <- elevenlabs_transcribe("your_audio.mp3")
+
+# AssemblyAI API
+transcript <- assemblyai_transcribe("your_video.mp4")
+```
+
+The package includes a brief video snippet you can use for testing
+
+```
+my_video <- system.file("extdata", "sample_video_snippet.mp4", package = "text2speechR")
+
+# ElevenLabs API
+transcript <- elevenlabs_transcribe(my_video)
+
+# AssemblyAI API
+transcript <- assemblyai_transcribe(my_video)
+```
+
+### Saving as text or subtitles
+
+Once you have a transcript, save it in your preferred format:
+
+```{r}
+# Save as plain text file
+elevenlabs_transcript_to_txt(transcript, "transcript.txt")
+assemblyai_transcript_to_txt(transcript, "transcript.txt")
+
+# Save as an .srt captions file
+elevenlabs_transcript_to_srt(transcript, "subtitles.srt")
+assemblyai_transcript_to_srt(transcript, "subtitles.srt")
+```
+
+### More options
+
+Both APIs support additional features like speaker identification and language specification. For example:
+
+```{r}
+# Identify different speakers
+transcript <- elevenlabs_transcribe("meeting.mp4", diarize = TRUE)
+transcript <- assemblyai_transcribe("meeting.mp4", speaker_labels = TRUE)
+
+# Specify language for better accuracy
+transcript <- elevenlabs_transcribe("interview.mp3", language_code = "es")
+```
+
+Check the help files (`?elevenlabs_transcribe` and `?assemblyai_transcribe`) for more options.
+
+### Editing subtitles
+
+The package includes a subtitle editor that lets you watch your video while editing captions. You can load it with an R function:
+
+```
+# Requires Node.js be installed
+edit_subtitles_standalone("video.mp4", "subtitles.srt")
+```
+
+The editor opens in your browser with video playback, click-to-seek, and inline editing. Press Ctrl+C in R to stop.
+
+More specifically: You can click to advance the video and the caption text will sync to that location. Same if you click one of the subtitle text cards (outside of the text box - clicking inside the text box allows you to edit the text) -- the video will sync to that location.
+
+
+## API Pricing Differences
+
+As of November 2025, you could process 2.5 hours per month on the ElevenLabs free plan, but otherwise you need at least a $5/month plan (that gets you 12.5 hours/ month - additional hours are 40 cents.) AssemblyAI gives you 185 free hours to start, after which you need to pay per use. Its default model is 15 cents per hour on that plan.
