@@ -37,10 +37,10 @@ You can use either API to transcribe audio or video files:
 
 ```
 # ElevenLabs API
-transcript <- elevenlabs_transcribe("your_audio.mp3")
+transcript11 <- elevenlabs_transcribe("your_audio.mp3")
 
 # AssemblyAI API
-transcript <- assemblyai_transcribe("your_video.mp4")
+transcriptai <- assemblyai_transcribe("your_video.mp4")
 ```
 
 The package includes a brief video snippet you can use for testing
@@ -49,10 +49,10 @@ The package includes a brief video snippet you can use for testing
 my_video <- system.file("extdata", "sample_video_snippet.mp4", package = "text2speechR")
 
 # ElevenLabs API
-transcript <- elevenlabs_transcribe(my_video)
+transcript11 <- elevenlabs_transcribe(my_video)
 
 # AssemblyAI API
-transcript <- assemblyai_transcribe(my_video)
+transcriptai <- assemblyai_transcribe(my_video)
 ```
 
 ### Saving as text or subtitles
@@ -61,12 +61,12 @@ Once you have a transcript, save it in your preferred format:
 
 ```{r}
 # Save as plain text file
-elevenlabs_transcript_to_txt(transcript, "transcript.txt")
-assemblyai_transcript_to_txt(transcript, "transcript.txt")
+elevenlabs_transcript_to_txt(transcript11, "transcript11.txt")
+assemblyai_transcript_to_txt(transcriptai, "transcriptai.txt")
 
 # Save as an .srt captions file
-elevenlabs_transcript_to_srt(transcript, "subtitles.srt")
-assemblyai_transcript_to_srt(transcript, "subtitles.srt")
+elevenlabs_transcript_to_srt(transcript11, "subtitles11.srt")
+assemblyai_transcript_to_srt(transcriptai, "subtitlesai.srt")
 ```
 
 ### More options
