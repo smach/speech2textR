@@ -38,7 +38,7 @@
 #' }
 #'
 #' @export
-elevenlabs_auth <- function(api_key = NULL, validate = FALSE) {
+elevenlabs_auth <- function(api_key = Sys.getenv("ELEVENLABS_API_KEY"), validate = FALSE) {
   # Try to get API key from parameter or environment variable
   if (is.null(api_key)) {
     api_key <- Sys.getenv("ELEVENLABS_API_KEY")

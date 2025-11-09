@@ -27,6 +27,8 @@ library(speech2textR)
 
 You'll need accounts and API keys for whichever transcription API you want to use - [ElevenLabs]((https://elevenlabs.io/docs/quickstart)), [AssemblyAI](https://www.assemblyai.com/docs/getting-started/transcribe-an-audio-file), or both.
 
+Authenticate with `elevenlabs_auth("YOUR_API_KEY")` or `assemblyai_auth("YOUR-API-KEY")`. Both default to environment variables (`ELEVENLABS_API_KEY` or `ASSEMBLYAI_API_KEY`)
+
 ## Usage
 
 ### Getting transcriptions

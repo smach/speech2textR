@@ -35,7 +35,7 @@
 #' }
 #'
 #' @export
-assemblyai_auth <- function(api_key = NULL, validate = FALSE) {
+assemblyai_auth <- function(api_key = Sys.getenv("ASSEMBLYAI_API_KEY"), validate = FALSE) {
   # Try to get API key from parameter or environment variable
   if (is.null(api_key)) {
     api_key <- Sys.getenv("ASSEMBLYAI_API_KEY")

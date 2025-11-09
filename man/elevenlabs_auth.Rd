@@ -4,7 +4,7 @@
 \alias{elevenlabs_auth}
 \title{Authenticate to the ElevenLabs API}
 \usage{
-elevenlabs_auth(api_key = NULL, validate = FALSE)
+elevenlabs_auth(api_key = Sys.getenv("ELEVENLABS_API_KEY"), validate = FALSE)
 }
 \arguments{
 \item{api_key}{Character string containing your ElevenLabs API key.

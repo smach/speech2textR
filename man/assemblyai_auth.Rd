@@ -4,7 +4,7 @@
 \alias{assemblyai_auth}
 \title{Authenticate to the AssemblyAI API}
 \usage{
-assemblyai_auth(api_key = NULL, validate = FALSE)
+assemblyai_auth(api_key = Sys.getenv("ASSEMBLYAI_API_KEY"), validate = FALSE)
 }
 \arguments{
 \item{api_key}{Character string containing your AssemblyAI API key.
