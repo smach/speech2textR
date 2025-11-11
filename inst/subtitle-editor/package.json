@@ -1,0 +1,16 @@
+{
+  "name": "subtitle-editor",
+  "version": "1.0.0",
+  "description": "Standalone subtitle editor with video playback",
+  "main": "server.js",
+  "bin": {
+    "subtitle-editor": "./server.js"
+  },
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": ["subtitles", "srt", "video", "editor"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {}
+}

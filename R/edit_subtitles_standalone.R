@@ -40,11 +40,11 @@ edit_subtitles_standalone <- function(video_file, srt_file) {
   srt_file <- normalizePath(srt_file)
 
   # Find the subtitle-editor directory in the installed package
-  editor_dir <- system.file("subtitle-editor", package = "elevenlabsr")
+  editor_dir <- system.file("subtitle-editor", package = "speech2textR")
 
   if (editor_dir == "" || !dir.exists(editor_dir)) {
     stop("Subtitle editor not found in package installation.\n",
-         "Please reinstall the package or check the subtitle-editor/ directory.")
+         "Please reinstall the package.")
   }
 
   server_path <- file.path(editor_dir, "server.js")
