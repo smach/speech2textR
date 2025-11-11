@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Subtitle Editor</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+
+    h1 {
+      color: #333;
+      margin-bottom: 20px;
+      font-size: 24px;
+    }
+
+    .main-container {
+      display: flex;
+      gap: 20px;
+      height: 90vh;
+    }
+
+    .video-panel, .subtitle-panel {
+      flex: 1;
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      display: flex;
+      flex-direction: column;
+    }
+
+    h3 {
+      margin-top: 0;
+      margin-bottom: 15px;
+      color: #333;
+    }
+
+    video {
+      width: 100%;
+      max-height: 70vh;
+      border-radius: 4px;
+      background: black;
+    }
+
+    .controls {
+      margin-top: 15px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .time-display {
+      font-family: monospace;
+      font-size: 14px;
+      color: #666;
+      padding: 5px 10px;
+      background: #f0f0f0;
+      border-radius: 4px;
+    }
+
+    .subtitle-list {
+      flex: 1;
+      overflow-y: auto;
+      margin-bottom: 15px;
+      padding: 5px;
+    }
+
+    .subtitle-block {
+      padding: 12px;
+      margin-bottom: 10px;
+      border: 2px solid #e0e0e0;
+      border-radius: 6px;
+      background: #fafafa;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .subtitle-block:hover {
+      border-color: #2196F3;
+      background: #f0f7ff;
+      transform: translateX(2px);
+      box-shadow: 0 2px 4px rgba(33, 150, 243, 0.2);
+    }
+
+    .subtitle-block.active {
+      border-color: #4CAF50;
+      background: #e8f5e9;
+      box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+    }
+
+    .subtitle-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 6px;
+      font-size: 11px;
+      color: #666;
+    }
+
+    .subtitle-number {
+      font-weight: bold;
+    }
+
+    .subtitle-time {
+      font-family: monospace;
+      color: #2196F3;
+    }
+
+    .subtitle-text {
+      width: 100%;
+      min-height: 40px;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+      font-family: system-ui, -apple-system, sans-serif;
+      resize: vertical;
+    }
+
+    .subtitle-text:focus {
+      outline: none;
+      border-color: #2196F3;
+      box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.1);
+    }
+
+    .save-group {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex: 1;
+    }
+
+    .filename-input {
+      flex: 1;
+      padding: 8px 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+      font-family: monospace;
+    }
+
+    .filename-input:focus {
+      outline: none;
+      border-color: #2196F3;
+    }
+
+    .btn-save {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      white-space: nowrap;
+    }
+
+    .btn-save:hover {
+      background-color: #45a049;
+    }
+
+    .status-message {
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 4px;
+      display: none;
+      width: 100%;
+    }
+
+    .status-success {
+      background-color: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+
+    .status-error {
+      background-color: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+
+    .help-text {
+      font-size: 12px;
+      color: #666;
+      margin-top: 10px;
+    }
+
+    .save-location {
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 8px;
+      padding: 6px 10px;
+      background: #f9f9f9;
+      border-radius: 4px;
+      font-family: monospace;
+      word-break: break-all;
+    }
+
+    .save-location strong {
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+  <h1>Subtitle Editor</h1>
+
+  <div class="main-container">
+    <div class="video-panel">
+      <h3>Video</h3>
+      <video id="videoPlayer" controls preload="auto">
+        <source src="/video" type="video/mp4">
+      </video>
+      <div class="controls">
+        <span class="time-display" id="timeDisplay">00:00:00.000</span>
+      </div>
+    </div>
+
+    <div class="subtitle-panel">
+      <h3>Subtitles (.srt)</h3>
+      <div id="subtitleList" class="subtitle-list"></div>
+      <div id="saveLocation" class="save-location"></div>
+      <div class="controls">
+        <div class="save-group">
+          <input type="text" id="outputFilename" class="filename-input" placeholder="output.srt">
+          <button id="saveBtn" class="btn-save">Save As</button>
+        </div>
+      </div>
+      <div id="statusMessage" class="status-message"></div>
+      <div class="help-text">
+        Tip: Click any subtitle card to jump to that time in the video. Currently playing subtitle is highlighted in green. Edit text inline and click 'Save As' to save changes.
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let subtitles = [];
+    let currentActiveIndex = -1;
+    const videoPlayer = document.getElementById('videoPlayer');
+    const subtitleList = document.getElementById('subtitleList');
+    const timeDisplay = document.getElementById('timeDisplay');
+    const outputFilename = document.getElementById('outputFilename');
+    const saveBtn = document.getElementById('saveBtn');
+    const statusMessage = document.getElementById('statusMessage');
+
+    // Parse SRT format
+    function parseSRT(content) {
+      const lines = content.split('\n');
+      const subs = [];
+      let i = 0;
+
+      while (i < lines.length) {
+        // Skip empty lines
+        if (lines[i].trim() === '') {
+          i++;
+          continue;
+        }
+
+        // Read subtitle number
+        const number = lines[i].trim();
+        i++;
+
+        if (i >= lines.length || !lines[i].includes('-->')) {
+          break;
+        }
+
+        // Read timestamp
+        const timeLine = lines[i].trim();
+        const [start, end] = timeLine.split('-->').map(t => t.trim());
+        i++;
+
+        // Read text (may be multiple lines)
+        const textLines = [];
+        while (i < lines.length && lines[i].trim() !== '') {
+          textLines.push(lines[i]);
+          i++;
+        }
+        const text = textLines.join('\n');
+
+        // Convert timestamp to seconds
+        function timeToSeconds(timeStr) {
+          const [hms, ms] = timeStr.replace(',', '.').split('.');
+          const [h, m, s] = hms.split(':').map(Number);
+          return h * 3600 + m * 60 + s + (ms ? parseFloat('0.' + ms) : 0);
+        }
+
+        subs.push({
+          number,
+          start,
+          end,
+          start_seconds: timeToSeconds(start),
+          end_seconds: timeToSeconds(end),
+          text
+        });
+
+        i++;
+      }
+
+      return subs;
+    }
+
+    // Render subtitle blocks
+    function renderSubtitles() {
+      let html = '';
+      subtitles.forEach((sub, index) => {
+        html += `<div class="subtitle-block" data-index="${index}">
+          <div class="subtitle-header">
+            <span class="subtitle-number">#${sub.number}</span>
+            <span class="subtitle-time">${sub.start} → ${sub.end}</span>
+          </div>
+          <textarea class="subtitle-text" data-index="${index}">${sub.text}</textarea>
+        </div>`;
+      });
+      subtitleList.innerHTML = html;
+
+      // Add click handlers
+      document.querySelectorAll('.subtitle-block').forEach(block => {
+        block.addEventListener('click', (e) => {
+          if (!e.target.classList.contains('subtitle-text')) {
+            const index = parseInt(block.dataset.index);
+            videoPlayer.currentTime = subtitles[index].start_seconds;
+            videoPlayer.play();
+          }
+        });
+      });
+
+      // Update text on change
+      document.querySelectorAll('.subtitle-text').forEach(textarea => {
+        textarea.addEventListener('input', (e) => {
+          const index = parseInt(e.target.dataset.index);
+          subtitles[index].text = e.target.value;
+        });
+      });
+    }
+
+    // Update time display and highlighting
+    videoPlayer.addEventListener('timeupdate', () => {
+      const currentTime = videoPlayer.currentTime;
+      const hours = Math.floor(currentTime / 3600);
+      const minutes = Math.floor((currentTime % 3600) / 60);
+      const seconds = Math.floor(currentTime % 60);
+      const milliseconds = Math.floor((currentTime % 1) * 1000);
+
+      timeDisplay.textContent =
+        String(hours).padStart(2, '0') + ':' +
+        String(minutes).padStart(2, '0') + ':' +
+        String(seconds).padStart(2, '0') + '.' +
+        String(milliseconds).padStart(3, '0');
+
+      // Find and highlight current subtitle
+      let newActiveIndex = -1;
+      for (let i = 0; i < subtitles.length; i++) {
+        if (currentTime >= subtitles[i].start_seconds &&
+            currentTime <= subtitles[i].end_seconds) {
+          newActiveIndex = i;
+          break;
+        }
+      }
+
+      // Update highlighting
+      if (newActiveIndex !== currentActiveIndex) {
+        document.querySelectorAll('.subtitle-block').forEach(b => b.classList.remove('active'));
+        if (newActiveIndex !== -1) {
+          const activeBlock = document.querySelector(`.subtitle-block[data-index="${newActiveIndex}"]`);
+          if (activeBlock) {
+            activeBlock.classList.add('active');
+
+            // Auto-scroll
+            const container = subtitleList;
+            const scrollTop = container.scrollTop;
+            const containerHeight = container.clientHeight;
+            const blockTop = activeBlock.offsetTop;
+            const blockHeight = activeBlock.offsetHeight;
+
+            if (blockTop < scrollTop || blockTop + blockHeight > scrollTop + containerHeight) {
+              container.scrollTo({
+                top: blockTop - containerHeight / 3,
+                behavior: 'smooth'
+              });
+            }
+          }
+        }
+        currentActiveIndex = newActiveIndex;
+      }
+    });
+
+    // Save button
+    saveBtn.addEventListener('click', async () => {
+      const filename = outputFilename.value.trim();
+      if (!filename) {
+        alert('Please enter a filename');
+        return;
+      }
+
+      // Reconstruct SRT
+      let srtContent = '';
+      subtitles.forEach(sub => {
+        srtContent += sub.number + '\n';
+        srtContent += sub.start + ' --> ' + sub.end + '\n';
+        srtContent += sub.text + '\n\n';
+      });
+
+      try {
+        const response = await fetch('/save', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ filename, content: srtContent })
+        });
+
+        const result = await response.json();
+
+        statusMessage.className = 'status-message ' + (result.success ? 'status-success' : 'status-error');
+        if (result.success && result.fullPath) {
+          statusMessage.textContent = `✓ Saved to: ${result.fullPath}`;
+        } else {
+          statusMessage.textContent = result.message;
+        }
+        statusMessage.style.display = 'block';
+
+        setTimeout(() => {
+          statusMessage.style.display = 'none';
+        }, 5000);
+      } catch (err) {
+        statusMessage.className = 'status-message status-error';
+        statusMessage.textContent = 'Error: ' + err.message;
+        statusMessage.style.display = 'block';
+      }
+    });
+
+    // Load save directory info
+    fetch('/save-info')
+      .then(res => res.json())
+      .then(info => {
+        const saveLocation = document.getElementById('saveLocation');
+        saveLocation.innerHTML = `<strong>Save location:</strong> ${info.directory}/`;
+        outputFilename.value = info.defaultFilename.replace('.srt', '_edited.srt');
+      })
+      .catch(err => {
+        console.error('Error loading save info:', err);
+      });
+
+    // Load SRT file
+    fetch('/srt')
+      .then(res => res.text())
+      .then(content => {
+        subtitles = parseSRT(content);
+        renderSubtitles();
+        console.log('Loaded', subtitles.length, 'subtitles');
+      })
+      .catch(err => {
+        console.error('Error loading SRT:', err);
+        alert('Failed to load SRT file');
+      });
+  </script>
+</body>
+</html>
