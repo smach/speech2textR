@@ -1,0 +1,16 @@
+{
+  "name": "transcript-editor",
+  "version": "1.0.0",
+  "description": "Standalone transcript editor with audio sync",
+  "main": "server.js",
+  "bin": {
+    "transcript-editor": "./server.js"
+  },
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": ["transcript", "audio", "editor", "sync", "speech-to-text"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {}
+}

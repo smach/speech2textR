@@ -122,6 +122,18 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // Get save directory info
+  if (req.url === '/save-info') {
+    const saveDir = path.dirname(txtFile);
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({
+      directory: saveDir,
+      defaultFilename: path.basename(txtFile),
+      fullPath: txtFile
+    }));
+    return;
+  }
+
   // Save edited transcript
   if (req.url === '/save' && req.method === 'POST') {
     let body = '';
@@ -131,13 +143,20 @@ const server = http.createServer((req, res) => {
     req.on('end', () => {
       try {
         const data = JSON.parse(body);
-        fs.writeFileSync(txtFile, data.text, 'utf8');
+        const filename = data.filename || path.basename(txtFile);
+        const outputPath = path.join(path.dirname(txtFile), filename);
+
+        fs.writeFileSync(outputPath, data.text, 'utf8');
         res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ success: true, message: 'Transcript saved' }));
-        console.log(`Transcript saved to: ${txtFile}`);
+        res.end(JSON.stringify({
+          success: true,
+          message: 'Transcript saved successfully!',
+          fullPath: outputPath
+        }));
+        console.log(`Transcript saved to: ${outputPath}`);
       } catch (err) {
         res.writeHead(500, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ success: false, error: err.message }));
+        res.end(JSON.stringify({ success: false, message: err.message }));
       }
     });
     return;

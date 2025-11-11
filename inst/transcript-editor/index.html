@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Transcript Editor with Audio Sync</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+
+    h1 {
+      color: #333;
+      margin-bottom: 20px;
+      font-size: 24px;
+    }
+
+    .main-container {
+      display: flex;
+      gap: 20px;
+      height: 90vh;
+    }
+
+    .audio-panel, .transcript-panel {
+      flex: 1;
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      display: flex;
+      flex-direction: column;
+    }
+
+    h3 {
+      margin-top: 0;
+      margin-bottom: 15px;
+      color: #333;
+    }
+
+    audio {
+      width: 100%;
+      margin-bottom: 15px;
+    }
+
+    .controls {
+      margin-top: 15px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .time-display {
+      font-family: monospace;
+      font-size: 14px;
+      color: #666;
+      padding: 5px 10px;
+      background: #f0f0f0;
+      border-radius: 4px;
+    }
+
+    .waveform-placeholder {
+      flex: 1;
+      background: #f9f9f9;
+      border: 1px dashed #ccc;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #999;
+      font-size: 14px;
+      min-height: 200px;
+    }
+
+    .transcript-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      background: #fafafa;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      margin-bottom: 15px;
+      line-height: 1.8;
+      font-size: 16px;
+      cursor: text;
+    }
+
+    .transcript-text {
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+
+    .word {
+      display: inline;
+      cursor: pointer;
+      transition: background-color 0.1s;
+      padding: 2px 1px;
+      border-radius: 2px;
+    }
+
+    .word:hover {
+      background-color: #e3f2fd;
+    }
+
+    .word.active {
+      background-color: #4CAF50;
+      color: white;
+      font-weight: 500;
+    }
+
+    .editable-transcript {
+      width: 100%;
+      height: 100%;
+      padding: 20px;
+      border: none;
+      resize: none;
+      font-family: inherit;
+      font-size: 16px;
+      line-height: 1.8;
+      background: transparent;
+    }
+
+    .editable-transcript:focus {
+      outline: none;
+    }
+
+    .mode-toggle {
+      margin-bottom: 10px;
+      display: flex;
+      gap: 10px;
+    }
+
+    .mode-btn {
+      padding: 6px 12px;
+      border: 1px solid #ddd;
+      background: white;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.2s;
+    }
+
+    .mode-btn.active {
+      background: #2196F3;
+      color: white;
+      border-color: #2196F3;
+    }
+
+    .mode-btn:hover:not(.active) {
+      background: #f5f5f5;
+    }
+
+    .save-group {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex: 1;
+    }
+
+    .filename-input {
+      flex: 1;
+      padding: 8px 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+      font-family: monospace;
+    }
+
+    .filename-input:focus {
+      outline: none;
+      border-color: #2196F3;
+    }
+
+    .btn-save {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      white-space: nowrap;
+      transition: background-color 0.2s;
+    }
+
+    .btn-save:hover {
+      background-color: #45a049;
+    }
+
+    .status-message {
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 4px;
+      display: none;
+      width: 100%;
+    }
+
+    .status-success {
+      background-color: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+
+    .status-error {
+      background-color: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+
+    .help-text {
+      font-size: 12px;
+      color: #666;
+      margin-top: 10px;
+    }
+
+    .save-location {
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 8px;
+      padding: 6px 10px;
+      background: #f9f9f9;
+      border-radius: 4px;
+      font-family: monospace;
+      word-break: break-all;
+    }
+
+    .save-location strong {
+      color: #333;
+    }
+
+    .info-panel {
+      background: #e3f2fd;
+      padding: 15px;
+      border-radius: 4px;
+      margin-bottom: 15px;
+      border-left: 4px solid #2196F3;
+    }
+
+    .info-panel h4 {
+      margin-bottom: 8px;
+      color: #1976D2;
+      font-size: 14px;
+    }
+
+    .info-panel ul {
+      margin-left: 20px;
+      font-size: 13px;
+      color: #555;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+  <h1>Transcript Editor with Audio Sync</h1>
+
+  <div class="main-container">
+    <div class="audio-panel">
+      <h3>Audio</h3>
+      <audio id="audioPlayer" controls preload="auto">
+        <source src="/audio" type="audio/mpeg">
+        Your browser does not support the audio element.
+      </audio>
+      <div class="controls">
+        <span class="time-display" id="timeDisplay">00:00:00.000</span>
+      </div>
+
+      <div class="info-panel">
+        <h4>How to use:</h4>
+        <ul>
+          <li><strong>Sync Mode:</strong> Click any word to jump audio to that position</li>
+          <li><strong>Edit Mode:</strong> Edit text freely; save when done</li>
+          <li>Current word/phrase highlights in green as audio plays</li>
+          <li>Use audio player controls to navigate</li>
+        </ul>
+      </div>
+
+      <div class="waveform-placeholder">
+        Audio waveform visualization<br>could go here (future enhancement)
+      </div>
+    </div>
+
+    <div class="transcript-panel">
+      <h3>Transcript</h3>
+
+      <div class="mode-toggle">
+        <button class="mode-btn active" data-mode="sync">Sync Mode</button>
+        <button class="mode-btn" data-mode="edit">Edit Mode</button>
+      </div>
+
+      <div id="transcriptContainer" class="transcript-container">
+        <div id="transcriptDisplay" class="transcript-text"></div>
+        <textarea id="transcriptEdit" class="editable-transcript" style="display: none;"></textarea>
+      </div>
+
+      <div id="saveLocation" class="save-location"></div>
+      <div class="controls">
+        <div class="save-group">
+          <input type="text" id="outputFilename" class="filename-input" placeholder="transcript.txt">
+          <button id="saveBtn" class="btn-save">Save As</button>
+        </div>
+      </div>
+      <div id="statusMessage" class="status-message"></div>
+      <div class="help-text">
+        <strong>Sync Mode:</strong> Words are clickable and sync with audio.
+        <strong>Edit Mode:</strong> Full text editing enabled (sync disabled during editing).
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let transcriptData = null;
+    let words = [];
+    let currentMode = 'sync';
+    let currentActiveWordIndex = -1;
+
+    const audioPlayer = document.getElementById('audioPlayer');
+    const transcriptDisplay = document.getElementById('transcriptDisplay');
+    const transcriptEdit = document.getElementById('transcriptEdit');
+    const timeDisplay = document.getElementById('timeDisplay');
+    const outputFilename = document.getElementById('outputFilename');
+    const saveBtn = document.getElementById('saveBtn');
+    const statusMessage = document.getElementById('statusMessage');
+
+    // Mode switching
+    document.querySelectorAll('.mode-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentMode = btn.dataset.mode;
+
+        if (currentMode === 'edit') {
+          // Switch to edit mode
+          transcriptEdit.value = transcriptData.text;
+          transcriptDisplay.style.display = 'none';
+          transcriptEdit.style.display = 'block';
+          transcriptEdit.focus();
+        } else {
+          // Switch back to sync mode
+          transcriptData.text = transcriptEdit.value;
+          transcriptDisplay.style.display = 'block';
+          transcriptEdit.style.display = 'none';
+          renderTranscript();
+        }
+      });
+    });
+
+    // Render transcript with word-level sync
+    function renderTranscript() {
+      if (!transcriptData || !transcriptData.words) {
+        transcriptDisplay.innerHTML = '<em>Loading transcript...</em>';
+        return;
+      }
+
+      // Build HTML with clickable words
+      let html = '';
+      words = transcriptData.words;
+
+      words.forEach((word, index) => {
+        const wordText = word.text;
+        const start = word.start;
+        const end = word.end;
+
+        html += `<span class="word" data-index="${index}" data-start="${start}" data-end="${end}">${wordText}</span>`;
+
+        // Add space after word (unless it's punctuation)
+        if (index < words.length - 1) {
+          html += ' ';
+        }
+      });
+
+      transcriptDisplay.innerHTML = html;
+
+      // Add click handlers to words
+      document.querySelectorAll('.word').forEach(wordSpan => {
+        wordSpan.addEventListener('click', () => {
+          const startTime = parseFloat(wordSpan.dataset.start);
+          audioPlayer.currentTime = startTime;
+          audioPlayer.play();
+        });
+      });
+    }
+
+    // Update time display and highlighting
+    audioPlayer.addEventListener('timeupdate', () => {
+      const currentTime = audioPlayer.currentTime;
+      const hours = Math.floor(currentTime / 3600);
+      const minutes = Math.floor((currentTime % 3600) / 60);
+      const seconds = Math.floor(currentTime % 60);
+      const milliseconds = Math.floor((currentTime % 1) * 1000);
+
+      timeDisplay.textContent =
+        String(hours).padStart(2, '0') + ':' +
+        String(minutes).padStart(2, '0') + ':' +
+        String(seconds).padStart(2, '0') + '.' +
+        String(milliseconds).padStart(3, '0');
+
+      // Highlight current word (only in sync mode)
+      if (currentMode === 'sync' && words.length > 0) {
+        let newActiveIndex = -1;
+
+        for (let i = 0; i < words.length; i++) {
+          if (currentTime >= words[i].start && currentTime <= words[i].end) {
+            newActiveIndex = i;
+            break;
+          }
+        }
+
+        // Update highlighting
+        if (newActiveIndex !== currentActiveWordIndex) {
+          document.querySelectorAll('.word').forEach(w => w.classList.remove('active'));
+
+          if (newActiveIndex !== -1) {
+            const activeWord = document.querySelector(`.word[data-index="${newActiveIndex}"]`);
+            if (activeWord) {
+              activeWord.classList.add('active');
+
+              // Auto-scroll to keep active word visible
+              const container = transcriptDisplay.parentElement;
+              const scrollTop = container.scrollTop;
+              const containerHeight = container.clientHeight;
+              const wordTop = activeWord.offsetTop - transcriptDisplay.offsetTop;
+              const wordHeight = activeWord.offsetHeight;
+
+              if (wordTop < scrollTop || wordTop + wordHeight > scrollTop + containerHeight) {
+                container.scrollTo({
+                  top: wordTop - containerHeight / 3,
+                  behavior: 'smooth'
+                });
+              }
+            }
+          }
+
+          currentActiveWordIndex = newActiveIndex;
+        }
+      }
+    });
+
+    // Save button
+    saveBtn.addEventListener('click', async () => {
+      const filename = outputFilename.value.trim();
+      if (!filename) {
+        alert('Please enter a filename');
+        return;
+      }
+
+      // Get current text (depends on mode)
+      const textToSave = currentMode === 'edit' ? transcriptEdit.value : transcriptData.text;
+
+      try {
+        const response = await fetch('/save', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ filename, text: textToSave })
+        });
+
+        const result = await response.json();
+
+        statusMessage.className = 'status-message ' + (result.success ? 'status-success' : 'status-error');
+        if (result.success && result.fullPath) {
+          statusMessage.textContent = `✓ Saved to: ${result.fullPath}`;
+        } else {
+          statusMessage.textContent = result.message || 'Save failed';
+        }
+        statusMessage.style.display = 'block';
+
+        setTimeout(() => {
+          statusMessage.style.display = 'none';
+        }, 5000);
+      } catch (err) {
+        statusMessage.className = 'status-message status-error';
+        statusMessage.textContent = 'Error: ' + err.message;
+        statusMessage.style.display = 'block';
+      }
+    });
+
+    // Load save directory info
+    fetch('/save-info')
+      .then(res => res.json())
+      .then(info => {
+        const saveLocation = document.getElementById('saveLocation');
+        saveLocation.innerHTML = `<strong>Save location:</strong> ${info.directory}/`;
+        outputFilename.value = info.defaultFilename.replace('.txt', '_edited.txt');
+      })
+      .catch(err => {
+        console.error('Error loading save info:', err);
+      });
+
+    // Load transcript data
+    fetch('/transcript-data')
+      .then(res => res.json())
+      .then(data => {
+        transcriptData = data;
+        console.log('Loaded transcript with', data.words.length, 'words');
+        renderTranscript();
+      })
+      .catch(err => {
+        console.error('Error loading transcript:', err);
+        transcriptDisplay.innerHTML = '<em style="color: red;">Failed to load transcript data</em>';
+      });
+  </script>
+</body>
+</html>

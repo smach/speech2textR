@@ -97,6 +97,31 @@ The editor opens in your browser with video playback, click-to-seek, and inline 
 
 More specifically: You can click to advance the video and the caption text will sync to that location. Same if you click one of the subtitle text cards (outside of the text box - clicking inside the text box allows you to edit the text) -- the video will sync to that location.
 
+### Editing transcripts with audio sync
+
+NEW! You can also edit plain text transcripts while listening to audio, with full bidirectional sync between text and audio:
+
+```
+# Transcribe audio
+transcript <- elevenlabs_transcribe("audio.mp3")
+
+# Launch the transcript editor
+edit_transcript_standalone("audio.mp3", transcript)
+```
+
+The transcript editor displays your text as a clean, readable document (not SRT format). Features:
+- Click any word to jump the audio to that position
+- Click in the audio player to sync the text to that position
+- Current word highlights as audio plays
+- Toggle between Sync Mode (for navigation) and Edit Mode (for editing)
+- Save your edited transcript as a .txt file
+
+This works because the transcription APIs return word-level timestamps. You can also edit an existing .txt file if you have the original transcript object:
+
+```
+edit_transcript_standalone("audio.mp3", "transcript.txt", transcript_data = transcript)
+```
+
 
 ## API Pricing Differences
 
