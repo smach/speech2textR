@@ -243,7 +243,7 @@ elevenlabs_format_transcript_response <- function(result) {
 
 #' Null-coalescing operator
 #'
-#' @keywords internal
+#' @noRd
 `%||%` <- function(a, b) {
   if (is.null(a)) b else a
 }
