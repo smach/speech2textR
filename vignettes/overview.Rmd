@@ -19,9 +19,11 @@ knitr::opts_chunk$set(
 
 My key motivation for this package: One of my nieces is Deaf, and works as a psychologist at a local school for the Deaf. I do not want to post social media or other videos without captions! There are a lot of good LLMs for converting speech to text, and I wanted to include a couple in my R workflow. I also wanted a way to make it easier to compare a closed caption file with the original video and edit in place.
 
-This package includes R wrappers for two speech-to-text APIs: [ElevenLabs](https://elevenlabs.io/speech-to-text) and [AssemblyAI](https://www.assemblyai.com/playground). (I also like the local [Vibe](https://thewh1teagle.github.io/vibe/) app for some one-off transcriptions, but that's separate from an R workflow.)
+This package includes R wrappers for three speech-to-text APIs: [ElevenLabs](https://elevenlabs.io/speech-to-text), [AssemblyAI](https://www.assemblyai.com/playground), and [Mistral AI](https://docs.mistral.ai/studio/audio/speech_to_text) (running its Voxtral Mini Transcribe 2 model). (I also like the local [Vibe](https://thewh1teagle.github.io/vibe/) app for some one-off transcriptions, but that's separate from an R workflow.)
 
 I think the ElevenLabs API is slightly better, but it is more expensive. In addition, I haven't gotten the async processing to work yet, so you may have problems trying to process larger files.
+
+Mistral is the cheapest of the three, and it accepts recordings up to about three hours in a single request, so it's a good choice for long files.
 
 The `edit_subtitles_standalone("your_video.mp4", "your_subtitles.srt")` function launches a Node.js app that lets you watch your video on the left and edit the caption file on the right. You need node.js installed on your local computer for the editing app to work.
 
@@ -40,13 +42,13 @@ Load the package:
 library(speech2textR)
 ```
 
-You'll need accounts and API keys for whichever transcription API you want to use - [ElevenLabs]((https://elevenlabs.io/docs/quickstart)), [AssemblyAI](https://www.assemblyai.com/docs/getting-started/transcribe-an-audio-file), or both. Authenticate with `elevenlabs_auth("YOUR_API_KEY")` or `assemblyai_auth("YOUR-API-KEY")`. Both default to environment variables (`ELEVENLABS_API_KEY` or `ASSEMBLYAI_API_KEY`)
+You'll need accounts and API keys for whichever transcription APIs you want to use - [ElevenLabs]((https://elevenlabs.io/docs/quickstart)), [AssemblyAI](https://www.assemblyai.com/docs/getting-started/transcribe-an-audio-file), [Mistral](https://console.mistral.ai/), or any combination. Authenticate with `elevenlabs_auth("YOUR_API_KEY")`, `assemblyai_auth("YOUR-API-KEY")`, or `mistral_auth("YOUR-API-KEY")`. All default to environment variables (`ELEVENLABS_API_KEY`, `ASSEMBLYAI_API_KEY`, or `MISTRAL_API_KEY`)
 
 ## Usage
 
 ### Getting transcriptions
 
-You can use either API to transcribe audio or video files:
+You can use any of the APIs to transcribe audio or video files:
 
 ```
 # ElevenLabs API
@@ -54,6 +56,9 @@ transcript11 <- elevenlabs_transcribe("your_audio.mp3")
 
 # AssemblyAI API
 transcriptai <- assemblyai_transcribe("your_video.mp4")
+
+# Mistral API (Voxtral)
+transcriptm <- mistral_transcribe("your_video.mp4")
 ```
 
 The package includes a brief video snippet you can use for testing
@@ -66,6 +71,9 @@ transcript11 <- elevenlabs_transcribe(my_video)
 
 # AssemblyAI API
 transcriptai <- assemblyai_transcribe(my_video)
+
+# Mistral API
+transcriptm <- mistral_transcribe(my_video)
 ```
 
 ### Saving as text or subtitles
@@ -76,26 +84,46 @@ Once you have a transcript, save it in your preferred format:
 # Save as plain text file
 elevenlabs_transcript_to_txt(transcript11, "transcript11.txt")
 assemblyai_transcript_to_txt(transcriptai, "transcriptai.txt")
+mistral_transcript_to_txt(transcriptm, "transcriptm.txt")
 
 # Save as an .srt captions file
 elevenlabs_transcript_to_srt(transcript11, "subtitles11.srt")
 assemblyai_transcript_to_srt(transcriptai, "subtitlesai.srt")
+mistral_transcript_to_srt(transcriptm, "subtitlesm.srt")
 ```
 
 ### More options
 
-Both APIs support additional features like speaker identification and language specification. For example:
+All three APIs support additional features like speaker identification and language specification. For example:
 
 ```{r}
 # Identify different speakers
 transcript <- elevenlabs_transcribe("meeting.mp4", diarize = TRUE)
 transcript <- assemblyai_transcribe("meeting.mp4", speaker_labels = TRUE)
+transcript <- mistral_transcribe("meeting.mp4", diarize = TRUE)
 
 # Specify language for better accuracy
 transcript <- elevenlabs_transcribe("interview.mp3", language_code = "es")
+transcript <- mistral_transcribe("interview.mp3", language = "es")
 ```
 
-Check the help files (`?elevenlabs_transcribe` and `?assemblyai_transcribe`) for more options.
+Mistral has two extras worth knowing about. You can ask for word-level instead of segment-level timestamps, and you can give the model a list of words to help it spell names and jargon correctly:
+
+```{r}
+# Word-level timings
+transcript <- mistral_transcribe("interview.mp3", timestamps = "word")
+
+# Nudge the model toward the right spellings. Terms can't contain spaces,
+# so join multi-word phrases with underscores.
+transcript <- mistral_transcribe(
+  "rstats_talk.mp4",
+  context_bias = c("Quarto", "tidyverse", "Posit")
+)
+```
+
+One quirk of the Mistral API: it won't accept a `language` and timestamps in the same request. Since the caption functions need timestamps, leave `language` alone unless you only want plain text.
+
+Check the help files (`?elevenlabs_transcribe`, `?assemblyai_transcribe`, and `?mistral_transcribe`) for more options.
 
 ### Editing subtitles
 
@@ -114,3 +142,5 @@ More specifically: You can click to advance the video and the caption text will 
 ## API Pricing Differences
 
 As of November 2025, you could process 2.5 hours per month on the ElevenLabs free plan, but otherwise you need at least a $5/month plan (that gets you 12.5 hours/ month - additional hours are 40 cents.) AssemblyAI gives you 185 free hours to start, after which you need to pay per use. Its default model is 15 cents per hour on that plan.
+
+Mistral is the cheapest of the three at $0.003 per minute, or about 18 cents per hour, with no monthly minimum. It also has the highest single-request limit: about three hours of audio, versus roughly 15 minutes for the older Voxtral models. That makes it the one to reach for on a long recording.

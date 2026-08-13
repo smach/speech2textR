@@ -1,22 +1,22 @@
 Package: speech2textR
 Type: Package
 Title: Speech to Text API Wrappers and a Video Viewing App
-Version: 0.1.0
+Version: 0.2.0
 Authors@R: person(given = "Sharon", 
                   family = "Machlis", 
                   email = "DoMoreWithR@machlis.com", 
                   role = c("aut", "cre"))
-Description: Provides an R interface to the ElevenLabs and AssemblyAI APIs for speech-to-text transcription. Plus an app that makes it easier to watch a video and edit an associated .srt caption file. Built with help of Claude Code (and $250 of free credits)
+Description: Provides an R interface to the ElevenLabs, AssemblyAI, and Mistral AI APIs for speech-to-text transcription. Plus an app that makes it easier to watch a video and edit an associated .srt caption file. Built with help of Claude Code (and $250 of free credits).
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.3.2
 Imports:
+    curl,
     httr,
-    httr2,
-    jsonlite,
-    shiny
+    httr2
 Suggests:
+    jsonlite,
     testthat (>= 3.0.0),
     knitr,
     rmarkdown
