@@ -17,4 +17,11 @@ Data frame with text, start, end, speaker_id and score columns,
 Internal function shared by the segment and word paths. Start and end
 times are already in seconds, so no conversion is needed.
 }
+\details{
+Word chunks arrive with a leading space (" everyone"), which is how the
+model tokenizes rather than anything meaningful, so text is trimmed. That
+keeps the data frame consistent with the ElevenLabs and AssemblyAI ones
+and stops joined text from picking up doubled spaces. The untouched
+transcript is still available in the \code{text} element.
+}
 \keyword{internal}

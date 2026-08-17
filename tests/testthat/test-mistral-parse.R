@@ -67,6 +67,22 @@ test_that("word granularity chunks are reported as words", {
 })
 
 
+test_that("leading spaces on word chunks are trimmed", {
+  # The API sends " everyone", " to" and so on. Left alone, joining those
+  # doubles every space in captions and inflates the line-length limit.
+  transcript <- mistral_format_transcript_response(
+    mistral_test_word_response(),
+    timestamps = "word"
+  )
+
+  expect_equal(
+    transcript$words$text[1:5],
+    c("Welcome", "everyone", "to", "the", "meeting")
+  )
+  expect_false(any(grepl("^\\s", transcript$words$text)))
+})
+
+
 test_that("requesting both granularities keeps the chunks as segments", {
   transcript <- mistral_format_transcript_response(
     mistral_test_word_response(),

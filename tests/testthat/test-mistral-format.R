@@ -123,6 +123,42 @@ test_that("SRT regroups words when word timings are available", {
 })
 
 
+test_that("word-level captions do not pick up doubled spaces", {
+  transcript <- mistral_format_transcript_response(
+    mistral_test_word_response(),
+    timestamps = "word"
+  )
+
+  segments <- mistral_create_subtitle_segments(
+    transcript$words,
+    max_chars = 42,
+    max_duration = 7
+  )
+
+  expect_false(any(grepl("  ", segments$text, fixed = TRUE)))
+  expect_equal(segments$text[1], "Welcome everyone to the meeting")
+
+  srt <- mistral_transcript_to_srt(transcript)
+  expect_false(grepl("  ", srt, fixed = TRUE))
+})
+
+
+test_that("word-level plain text does not pick up stray spaces", {
+  transcript <- mistral_format_transcript_response(
+    mistral_test_word_response(),
+    timestamps = "word"
+  )
+
+  txt <- mistral_transcript_to_txt(transcript, include_timestamps = TRUE)
+
+  expect_false(grepl("  ", txt, fixed = TRUE))
+  expect_equal(
+    strsplit(txt, "\n\n", fixed = TRUE)[[1]][1],
+    "[speaker_0] (00:00) Welcome everyone to the meeting"
+  )
+})
+
+
 test_that("SRT needs timing information", {
   transcript <- mistral_format_transcript_response(
     list(text = "No timings here."),

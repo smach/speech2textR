@@ -161,7 +161,7 @@ mistral_is_authenticated <- function() {
 #'   \item{text}{Full transcript as plain text}
 #'   \item{segments}{Data frame of timed segments with columns text, start,
 #'     end, speaker_id and score, or NULL if segment timestamps were not
-#'     requested. Times are in seconds.}
+#'     requested. Times are in seconds and text is whitespace-trimmed.}
 #'   \item{words}{Data frame of timed words in the same shape as
 #'     \code{segments}, or NULL if word timestamps were not requested}
 #'   \item{language}{Detected or supplied language code}
@@ -475,6 +475,12 @@ mistral_format_transcript_response <- function(result, timestamps = NULL) {
 #' Internal function shared by the segment and word paths. Start and end
 #' times are already in seconds, so no conversion is needed.
 #'
+#' Word chunks arrive with a leading space (" everyone"), which is how the
+#' model tokenizes rather than anything meaningful, so text is trimmed. That
+#' keeps the data frame consistent with the ElevenLabs and AssemblyAI ones
+#' and stops joined text from picking up doubled spaces. The untouched
+#' transcript is still available in the \code{text} element.
+#'
 #' @param chunks List of chunks from the API response.
 #' @return Data frame with text, start, end, speaker_id and score columns,
 #'   or NULL if there are no chunks.
@@ -486,7 +492,7 @@ mistral_chunks_to_df <- function(chunks) {
 
   do.call(rbind, lapply(chunks, function(chunk) {
     data.frame(
-      text = chunk$text %||% "",
+      text = trimws(chunk$text %||% ""),
       start = as.numeric(chunk$start %||% NA),
       end = as.numeric(chunk$end %||% NA),
       speaker_id = as.character(chunk$speaker_id %||% NA),

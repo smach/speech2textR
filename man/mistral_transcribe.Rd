@@ -54,7 +54,7 @@ A list containing the transcription results:
   \item{text}{Full transcript as plain text}
   \item{segments}{Data frame of timed segments with columns text, start,
     end, speaker_id and score, or NULL if segment timestamps were not
-    requested. Times are in seconds.}
+    requested. Times are in seconds and text is whitespace-trimmed.}
   \item{words}{Data frame of timed words in the same shape as
     \code{segments}, or NULL if word timestamps were not requested}
   \item{language}{Detected or supplied language code}

@@ -16,18 +16,22 @@ mistral_test_transcript <- function() {
 }
 
 # A minimal word-level response, as returned when only "word" granularity
-# is requested and the API reports one chunk per word
+# is requested and the API reports one chunk per word.
+#
+# Note the leading spaces on every word after the first. That is what the
+# real API sends, and joining those naively doubles every space, so the
+# fixture keeps them.
 mistral_test_word_response <- function() {
   words <- list(
     list(text = "Welcome", start = 0.8, end = 1.2, speaker_id = "speaker_0"),
-    list(text = "everyone", start = 1.2, end = 1.9, speaker_id = "speaker_0"),
-    list(text = "to", start = 1.9, end = 2.1, speaker_id = "speaker_0"),
-    list(text = "the", start = 2.1, end = 2.3, speaker_id = "speaker_0"),
-    list(text = "meeting", start = 2.3, end = 3.0, speaker_id = "speaker_0"),
+    list(text = " everyone", start = 1.2, end = 1.9, speaker_id = "speaker_0"),
+    list(text = " to", start = 1.9, end = 2.1, speaker_id = "speaker_0"),
+    list(text = " the", start = 2.1, end = 2.3, speaker_id = "speaker_0"),
+    list(text = " meeting", start = 2.3, end = 3.0, speaker_id = "speaker_0"),
     list(text = "Thanks", start = 3.4, end = 3.9, speaker_id = "speaker_1"),
-    list(text = "for", start = 3.9, end = 4.1, speaker_id = "speaker_1"),
-    list(text = "having", start = 4.1, end = 4.5, speaker_id = "speaker_1"),
-    list(text = "me", start = 4.5, end = 4.8, speaker_id = "speaker_1")
+    list(text = " for", start = 3.9, end = 4.1, speaker_id = "speaker_1"),
+    list(text = " having", start = 4.1, end = 4.5, speaker_id = "speaker_1"),
+    list(text = " me", start = 4.5, end = 4.8, speaker_id = "speaker_1")
   )
 
   list(
