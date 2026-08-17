@@ -4,9 +4,9 @@ My key motivation for this package: One of my nieces is Deaf, and works as a psy
 
 This package includes R wrappers for three speech-to-text APIs: [ElevenLabs](https://elevenlabs.io/speech-to-text), [AssemblyAI](https://www.assemblyai.com/playground), and [Mistral AI](https://docs.mistral.ai/studio/audio/speech_to_text) (running its Voxtral Mini Transcribe 2 model). (I also like the local [Vibe](https://thewh1teagle.github.io/vibe/) app for some one-off transcriptions, but that's separate from an R workflow.)
 
-I think the ElevenLabs API is slightly better, but it is more expensive. In addition, I haven't gotten the async processing to work yet, so you may have problems trying to process larger files.
+The ElevenLabs API has been my favorite, but the Mistral model (recommended by someone on a data journalism Slack) looks to be quite good.
 
-Mistral is the cheapest of the three, and it accepts recordings up to about three hours in a single request, so it's a good choice for long files.
+Mistral is also the least expensive of the three, and it accepts recordings up to about three hours in a single request, so it's a good choice for long files.
 
 The `edit_subtitles_standalone("your_video.mp4", "your_subtitles.srt")` function launches a Node.js app that lets you watch your video on the left and edit the caption file on the right. You need node.js installed on your local computer for the editing app to work.
 
