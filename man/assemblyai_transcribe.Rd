@@ -4,7 +4,13 @@
 \alias{assemblyai_transcribe}
 \title{Transcribe audio or video file using AssemblyAI API}
 \usage{
-assemblyai_transcribe(file, speaker_labels = FALSE, verbose = TRUE)
+assemblyai_transcribe(
+  file,
+  speaker_labels = FALSE,
+  verbose = TRUE,
+  poll_interval = 3,
+  timeout = 3600
+)
 }
 \arguments{
 \item{file}{Character string. Path to the audio or video file to transcribe.}
@@ -13,6 +19,12 @@ assemblyai_transcribe(file, speaker_labels = FALSE, verbose = TRUE)
 Default is FALSE.}
 
 \item{verbose}{Logical. If TRUE, prints progress messages. Default is TRUE.}
+
+\item{poll_interval}{Numeric. Seconds to wait between status checks while
+the transcription runs. Default is 3.}
+
+\item{timeout}{Numeric. Give up after this many seconds. Default is 3600
+(one hour). Use Inf to wait indefinitely.}
 }
 \value{
 A list containing the transcription results:

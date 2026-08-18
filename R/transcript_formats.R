@@ -56,10 +56,11 @@ elevenlabs_transcript_to_srt <- function(transcript,
   }
 
   # Group words into subtitle segments
-  segments <- elevenlabs_create_subtitle_segments(
+  segments <- create_subtitle_segments(
     words = words,
     max_chars = max_chars_per_line,
-    max_duration = max_duration
+    max_duration = max_duration,
+    speaker_col = "speaker_id"
   )
 
   # Build SRT content
@@ -77,7 +78,7 @@ elevenlabs_transcript_to_srt <- function(transcript,
     # Subtitle text
     text <- segments$text[i]
     if (include_speakers && !is.na(segments$speaker_id[i])) {
-      text <- paste0("[", segments$speaker_id[i], "] ", text)
+      text <- paste0(speaker_label(segments$speaker_id[i]), " ", text)
     }
     srt_lines <- c(srt_lines, text)
 
@@ -172,112 +173,6 @@ elevenlabs_transcript_to_txt <- function(transcript,
 }
 
 
-#' Create subtitle segments from words
-#'
-#' Internal function to group words into appropriate subtitle segments.
-#'
-#' @keywords internal
-elevenlabs_create_subtitle_segments <- function(words, max_chars, max_duration) {
-
-  segments <- list()
-  current_segment <- list(
-    text = character(),
-    start = NA,
-    end = NA,
-    speaker_id = NA
-  )
-
-  for (i in seq_len(nrow(words))) {
-    word <- words[i, ]
-
-    # Skip if no timing info
-    if (is.na(word$start) || is.na(word$end)) {
-      next
-    }
-
-    # Initialize first segment
-    if (is.na(current_segment$start)) {
-      current_segment$start <- word$start
-      current_segment$speaker_id <- word$speaker_id
-    }
-
-    # Calculate what the segment would be with this word added
-    new_text <- paste(c(current_segment$text, word$text), collapse = " ")
-    new_duration <- word$end - current_segment$start
-
-    # Check if we need to start a new segment
-    speaker_changed <- !is.na(word$speaker_id) &&
-                      !is.na(current_segment$speaker_id) &&
-                      word$speaker_id != current_segment$speaker_id
-
-    if (nchar(new_text) > max_chars ||
-        new_duration > max_duration ||
-        speaker_changed) {
-
-      # Save current segment if it has content
-      if (length(current_segment$text) > 0) {
-        segments[[length(segments) + 1]] <- list(
-          text = paste(current_segment$text, collapse = " "),
-          start = current_segment$start,
-          end = current_segment$end,
-          speaker_id = current_segment$speaker_id
-        )
-      }
-
-      # Start new segment
-      current_segment <- list(
-        text = word$text,
-        start = word$start,
-        end = word$end,
-        speaker_id = word$speaker_id
-      )
-    } else {
-      # Add word to current segment
-      current_segment$text <- c(current_segment$text, word$text)
-      current_segment$end <- word$end
-    }
-  }
-
-  # Add final segment
-  if (length(current_segment$text) > 0) {
-    segments[[length(segments) + 1]] <- list(
-      text = paste(current_segment$text, collapse = " "),
-      start = current_segment$start,
-      end = current_segment$end,
-      speaker_id = current_segment$speaker_id
-    )
-  }
-
-  # Convert to data frame
-  do.call(rbind, lapply(segments, function(s) {
-    data.frame(
-      text = s$text,
-      start = s$start,
-      end = s$end,
-      speaker_id = s$speaker_id,
-      stringsAsFactors = FALSE
-    )
-  }))
-}
-
-
-#' Format timestamp for SRT format
-#'
-#' @keywords internal
-format_srt_timestamp <- function(seconds) {
-  if (is.na(seconds)) {
-    return("00:00:00,000")
-  }
-
-  hours <- floor(seconds / 3600)
-  minutes <- floor((seconds %% 3600) / 60)
-  secs <- floor(seconds %% 60)
-  millis <- round((seconds - floor(seconds)) * 1000)
-
-  sprintf("%02d:%02d:%02d,%03d", hours, minutes, secs, millis)
-}
-
-
 #' Format text with metadata (timestamps and speakers)
 #'
 #' @keywords internal
@@ -322,12 +217,12 @@ elevenlabs_format_text_with_metadata <- function(words,
       current_speaker <- word$speaker_id
 
       # Add timestamp if requested
-      prefix <- paste0("[", current_speaker, "]")
+      prefix <- speaker_label(current_speaker)
       if (include_timestamps && !is.na(word$start)) {
         if (timestamp_format == "seconds") {
           prefix <- paste0(prefix, " (", round(word$start, 2), "s)")
         } else {
-          prefix <- paste0(prefix, " (", elevenlabs_format_time_timestamp(word$start), ")")
+          prefix <- paste0(prefix, " (", format_time_timestamp(word$start), ")")
         }
       }
 
@@ -343,24 +238,4 @@ elevenlabs_format_text_with_metadata <- function(words,
   }
 
   paste(lines, collapse = "\n\n")
-}
-
-
-#' Format timestamp for readable time format
-#'
-#' @keywords internal
-elevenlabs_format_time_timestamp <- function(seconds) {
-  if (is.na(seconds)) {
-    return("00:00:00")
-  }
-
-  hours <- floor(seconds / 3600)
-  minutes <- floor((seconds %% 3600) / 60)
-  secs <- floor(seconds %% 60)
-
-  if (hours > 0) {
-    sprintf("%02d:%02d:%02d", hours, minutes, secs)
-  } else {
-    sprintf("%02d:%02d", minutes, secs)
-  }
 }

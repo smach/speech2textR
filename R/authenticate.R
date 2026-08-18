@@ -42,20 +42,16 @@ elevenlabs_auth <- function(api_key = Sys.getenv("ELEVENLABS_API_KEY"), validate
   # Try to get API key from parameter or environment variable
   if (is.null(api_key)) {
     api_key <- Sys.getenv("ELEVENLABS_API_KEY")
-    if (api_key == "") {
-      stop(
-        "No API key provided. Please either:\n",
-        "  1. Pass api_key parameter: elevenlabs_auth(api_key = 'your_key')\n",
-        "  2. Set ELEVENLABS_API_KEY environment variable: ",
-        "Sys.setenv(ELEVENLABS_API_KEY = 'your_key')",
-        call. = FALSE
-      )
-    }
   }
 
-  # Validate API key format (basic check)
-  if (!is.character(api_key) || nchar(api_key) == 0) {
-    stop("API key must be a non-empty character string.", call. = FALSE)
+  if (!is.character(api_key) || length(api_key) != 1 || is.na(api_key) || nchar(api_key) == 0) {
+    stop(
+      "No API key provided. Please either:\n",
+      "  1. Pass api_key parameter: elevenlabs_auth(api_key = 'your_key')\n",
+      "  2. Set ELEVENLABS_API_KEY environment variable: ",
+      "Sys.setenv(ELEVENLABS_API_KEY = 'your_key')",
+      call. = FALSE
+    )
   }
 
   # Store API key in package environment

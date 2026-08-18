@@ -547,10 +547,11 @@ mistral_transcript_to_srt <- function(transcript,
 
   if (!is.null(transcript$words) && nrow(transcript$words) > 0) {
     # Regroup words into subtitle-sized chunks
-    segments <- mistral_create_subtitle_segments(
+    segments <- create_subtitle_segments(
       words = transcript$words,
       max_chars = max_chars_per_line,
-      max_duration = max_duration
+      max_duration = max_duration,
+      speaker_col = "speaker_id"
     )
   } else if (!is.null(transcript$segments) && nrow(transcript$segments) > 0) {
     # Use the segments the API already produced
@@ -571,14 +572,14 @@ mistral_transcript_to_srt <- function(transcript,
     srt_lines <- c(srt_lines, as.character(i))
 
     # Timestamp line
-    start_time <- mistral_format_srt_timestamp(segments$start[i])
-    end_time <- mistral_format_srt_timestamp(segments$end[i])
+    start_time <- format_srt_timestamp(segments$start[i])
+    end_time <- format_srt_timestamp(segments$end[i])
     srt_lines <- c(srt_lines, paste(start_time, "-->", end_time))
 
     # Subtitle text
     text <- segments$text[i]
     if (include_speakers && !is.na(segments$speaker_id[i])) {
-      text <- paste0(mistral_speaker_label(segments$speaker_id[i]), " ", text)
+      text <- paste0(speaker_label(segments$speaker_id[i]), " ", text)
     }
     srt_lines <- c(srt_lines, text)
 
@@ -679,147 +680,6 @@ mistral_transcript_to_txt <- function(transcript,
 }
 
 
-#' Create subtitle segments from words (Mistral version)
-#'
-#' Internal function to group words into appropriate subtitle segments.
-#'
-#' @keywords internal
-mistral_create_subtitle_segments <- function(words, max_chars, max_duration) {
-
-  segments <- list()
-  current_segment <- list(
-    text = character(),
-    start = NA,
-    end = NA,
-    speaker_id = NA_character_
-  )
-
-  for (i in seq_len(nrow(words))) {
-    word <- words[i, ]
-
-    # Skip if no timing info
-    if (is.na(word$start) || is.na(word$end)) {
-      next
-    }
-
-    # Initialize first segment
-    if (is.na(current_segment$start)) {
-      current_segment$start <- word$start
-      current_segment$speaker_id <- word$speaker_id
-    }
-
-    # Calculate what the segment would be with this word added
-    new_text <- paste(c(current_segment$text, word$text), collapse = " ")
-    new_duration <- word$end - current_segment$start
-
-    # Check if we need to start a new segment
-    speaker_changed <- !is.na(word$speaker_id) &&
-                      !is.na(current_segment$speaker_id) &&
-                      word$speaker_id != current_segment$speaker_id
-
-    if (nchar(new_text) > max_chars ||
-        new_duration > max_duration ||
-        speaker_changed) {
-
-      # Save current segment if it has content
-      if (length(current_segment$text) > 0) {
-        segments[[length(segments) + 1]] <- list(
-          text = paste(current_segment$text, collapse = " "),
-          start = current_segment$start,
-          end = current_segment$end,
-          speaker_id = current_segment$speaker_id
-        )
-      }
-
-      # Start new segment
-      current_segment <- list(
-        text = word$text,
-        start = word$start,
-        end = word$end,
-        speaker_id = word$speaker_id
-      )
-    } else {
-      # Add word to current segment
-      current_segment$text <- c(current_segment$text, word$text)
-      current_segment$end <- word$end
-    }
-  }
-
-  # Add final segment
-  if (length(current_segment$text) > 0) {
-    segments[[length(segments) + 1]] <- list(
-      text = paste(current_segment$text, collapse = " "),
-      start = current_segment$start,
-      end = current_segment$end,
-      speaker_id = current_segment$speaker_id
-    )
-  }
-
-  # Convert to data frame
-  do.call(rbind, lapply(segments, function(s) {
-    data.frame(
-      text = s$text,
-      start = s$start,
-      end = s$end,
-      speaker_id = s$speaker_id,
-      stringsAsFactors = FALSE
-    )
-  }))
-}
-
-
-#' Format a speaker label for display
-#'
-#' Mistral speaker ids look like "speaker_0", so avoid printing
-#' "[Speaker speaker_0]".
-#'
-#' @keywords internal
-mistral_speaker_label <- function(speaker_id) {
-  if (grepl("^speaker", speaker_id, ignore.case = TRUE)) {
-    paste0("[", speaker_id, "]")
-  } else {
-    paste0("[Speaker ", speaker_id, "]")
-  }
-}
-
-
-#' Format timestamp for SRT format (Mistral version)
-#'
-#' @keywords internal
-mistral_format_srt_timestamp <- function(seconds) {
-  if (is.na(seconds)) {
-    return("00:00:00,000")
-  }
-
-  hours <- floor(seconds / 3600)
-  minutes <- floor((seconds %% 3600) / 60)
-  secs <- floor(seconds %% 60)
-  millis <- round((seconds - floor(seconds)) * 1000)
-
-  sprintf("%02d:%02d:%02d,%03d", hours, minutes, secs, millis)
-}
-
-
-#' Format timestamp for readable time format (Mistral version)
-#'
-#' @keywords internal
-mistral_format_time_timestamp <- function(seconds) {
-  if (is.na(seconds)) {
-    return("00:00:00")
-  }
-
-  hours <- floor(seconds / 3600)
-  minutes <- floor((seconds %% 3600) / 60)
-  secs <- floor(seconds %% 60)
-
-  if (hours > 0) {
-    sprintf("%02d:%02d:%02d", hours, minutes, secs)
-  } else {
-    sprintf("%02d:%02d", minutes, secs)
-  }
-}
-
-
 #' Format text with metadata (timestamps and speakers)
 #'
 #' Internal function. Consecutive chunks from the same speaker are joined
@@ -840,7 +700,7 @@ mistral_format_text_with_metadata <- function(chunks,
     if (timestamp_format == "seconds") {
       paste0("(", round(start, 2), "s)")
     } else {
-      paste0("(", mistral_format_time_timestamp(start), ")")
+      paste0("(", format_time_timestamp(start), ")")
     }
   }
 
@@ -863,7 +723,7 @@ mistral_format_text_with_metadata <- function(chunks,
     rows <- chunks[block_ids == block, ]
     speaker <- rows$speaker_id[1]
 
-    prefix <- if (is.na(speaker)) "" else mistral_speaker_label(speaker)
+    prefix <- if (is.na(speaker)) "" else speaker_label(speaker)
 
     if (include_timestamps) {
       prefix <- trimws(paste(prefix, format_start(rows$start[1])))

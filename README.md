@@ -110,6 +110,14 @@ transcript <- mistral_transcribe(
 
 One quirk of the Mistral API: it won't accept a `language` and timestamps in the same request. Since the caption functions need timestamps, leave `language` alone unless you only want plain text.
 
+AssemblyAI works by uploading the file, starting a job, and then waiting for it to
+finish. By default it gives up after an hour and tells you the transcript ID so you
+can collect the results later. On a very long recording you can wait longer:
+
+```
+transcriptai <- assemblyai_transcribe("long_meeting.mp4", timeout = 7200)
+```
+
 Check the help files (`?elevenlabs_transcribe`, `?assemblyai_transcribe`, and `?mistral_transcribe`) for more options.
 
 ### Editing subtitles

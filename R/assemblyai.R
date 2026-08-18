@@ -39,20 +39,16 @@ assemblyai_auth <- function(api_key = Sys.getenv("ASSEMBLYAI_API_KEY"), validate
   # Try to get API key from parameter or environment variable
   if (is.null(api_key)) {
     api_key <- Sys.getenv("ASSEMBLYAI_API_KEY")
-    if (api_key == "") {
-      stop(
-        "No API key provided. Please either:\n",
-        "  1. Pass api_key parameter: assemblyai_auth(api_key = 'your_key')\n",
-        "  2. Set ASSEMBLYAI_API_KEY environment variable: ",
-        "Sys.setenv(ASSEMBLYAI_API_KEY = 'your_key')",
-        call. = FALSE
-      )
-    }
   }
 
-  # Validate API key format (basic check)
-  if (!is.character(api_key) || nchar(api_key) == 0) {
-    stop("API key must be a non-empty character string.", call. = FALSE)
+  if (!is.character(api_key) || length(api_key) != 1 || is.na(api_key) || nchar(api_key) == 0) {
+    stop(
+      "No API key provided. Please either:\n",
+      "  1. Pass api_key parameter: assemblyai_auth(api_key = 'your_key')\n",
+      "  2. Set ASSEMBLYAI_API_KEY environment variable: ",
+      "Sys.setenv(ASSEMBLYAI_API_KEY = 'your_key')",
+      call. = FALSE
+    )
   }
 
   # Store API key in package environment
@@ -62,9 +58,12 @@ assemblyai_auth <- function(api_key = Sys.getenv("ASSEMBLYAI_API_KEY"), validate
   if (validate) {
     tryCatch({
       # Make a simple request to validate credentials
+      # req_perform() turns 4xx into an R error by default, which would skip
+      # the status checks below and downgrade a bad key to a warning.
       response <- httr2::request("https://api.assemblyai.com/v2/transcript") |>
         httr2::req_headers(authorization = api_key) |>
         httr2::req_method("GET") |>
+        httr2::req_error(is_error = function(resp) FALSE) |>
         httr2::req_perform()
 
       if (httr2::resp_status(response) == 401) {
@@ -145,13 +144,10 @@ assemblyai_upload_file <- function(file_path, api_key = Sys.getenv("ASSEMBLYAI_A
     message("Uploading file...")
   }
 
-  # Read the audio file as binary
-  audio_data <- readBin(file_path, "raw", file.info(file_path)$size)
-
-  # Upload to AssemblyAI
+  # Stream from disk rather than reading the whole recording into memory
   response <- httr2::request("https://api.assemblyai.com/v2/upload") |>
     httr2::req_headers(authorization = api_key) |>
-    httr2::req_body_raw(audio_data) |>
+    httr2::req_body_file(file_path) |>
     httr2::req_perform()
 
   # Extract the upload URL from response
@@ -201,35 +197,59 @@ assemblyai_submit_transcription <- function(audio_url, api_key, speaker_labels =
 #' @param transcript_id Character string. The transcript ID.
 #' @param api_key Character string. AssemblyAI API key.
 #' @param verbose Logical. If TRUE, prints progress messages.
+#' @param poll_interval Numeric. Seconds to wait between status checks.
+#'   Default is 3.
+#' @param timeout Numeric. Give up after this many seconds. Default is 3600
+#'   (one hour). Use Inf to wait indefinitely.
 #'
 #' @return List containing the completed transcript data.
+#'
+#' @details
+#' Gives up rather than blocking the session forever if a job never leaves the
+#' queue. The transcript ID is included in the error so a job that is merely
+#' slow can still be collected later with another call.
+#'
 #' @keywords internal
-assemblyai_get_transcript <- function(transcript_id, api_key, verbose = TRUE) {
+assemblyai_get_transcript <- function(transcript_id, api_key, verbose = TRUE,
+                                      poll_interval = 3, timeout = 3600) {
   if (verbose) {
     message("Waiting for transcription to complete...")
   }
 
-  # Poll until transcription is complete
-  while (TRUE) {
+  deadline <- Sys.time() + timeout
+  status <- NA_character_
+
+  # Poll until transcription is complete, or we run out of patience
+  while (Sys.time() < deadline) {
     response <- httr2::request(paste0("https://api.assemblyai.com/v2/transcript/", transcript_id)) |>
       httr2::req_headers(authorization = api_key) |>
       httr2::req_perform()
 
     result <- httr2::resp_body_json(response)
+    status <- result$status %||% NA_character_
 
     # Check status
-    if (result$status == "completed") {
+    if (identical(status, "completed")) {
       if (verbose) {
         message("Transcription completed!")
       }
       return(result)
-    } else if (result$status == "error") {
+    } else if (identical(status, "error")) {
       stop(paste("Transcription error:", result$error), call. = FALSE)
     }
 
     # Wait before polling again
-    Sys.sleep(3)
+    Sys.sleep(poll_interval)
   }
+
+  stop(
+    "Transcription did not finish within ", timeout, " seconds.\n",
+    "  Last status: ", status, "\n",
+    "  The job may still be running. Wait longer with a bigger 'timeout',\n",
+    "  or collect it later with: assemblyai_get_transcript(\"",
+    transcript_id, "\", api_key)",
+    call. = FALSE
+  )
 }
 
 
@@ -241,6 +261,10 @@ assemblyai_get_transcript <- function(transcript_id, api_key, verbose = TRUE) {
 #' @param speaker_labels Logical. If TRUE, identifies different speakers in the audio.
 #'   Default is FALSE.
 #' @param verbose Logical. If TRUE, prints progress messages. Default is TRUE.
+#' @param poll_interval Numeric. Seconds to wait between status checks while
+#'   the transcription runs. Default is 3.
+#' @param timeout Numeric. Give up after this many seconds. Default is 3600
+#'   (one hour). Use Inf to wait indefinitely.
 #'
 #' @return A list containing the transcription results:
 #'   \item{text}{Full transcript as plain text}
@@ -278,7 +302,8 @@ assemblyai_get_transcript <- function(transcript_id, api_key, verbose = TRUE) {
 #' }
 #'
 #' @export
-assemblyai_transcribe <- function(file, speaker_labels = FALSE, verbose = TRUE) {
+assemblyai_transcribe <- function(file, speaker_labels = FALSE, verbose = TRUE,
+                                  poll_interval = 3, timeout = 3600) {
   # Validate inputs
   if (!file.exists(file)) {
     stop("File not found: ", file, call. = FALSE)
@@ -299,7 +324,13 @@ assemblyai_transcribe <- function(file, speaker_labels = FALSE, verbose = TRUE) 
   )
 
   # Step 3: Poll for completion and get results
-  transcript <- assemblyai_get_transcript(transcript_id, api_key, verbose = verbose)
+  transcript <- assemblyai_get_transcript(
+    transcript_id,
+    api_key,
+    verbose = verbose,
+    poll_interval = poll_interval,
+    timeout = timeout
+  )
 
   if (verbose) {
     message("Transcription complete!")
@@ -374,10 +405,11 @@ assemblyai_transcript_to_srt <- function(transcript,
   }
 
   # Group words into subtitle segments
-  segments <- assemblyai_create_subtitle_segments(
+  segments <- create_subtitle_segments(
     words = words_df,
     max_chars = max_chars_per_line,
-    max_duration = max_duration
+    max_duration = max_duration,
+    speaker_col = "speaker"
   )
 
   # Build SRT content
@@ -388,14 +420,14 @@ assemblyai_transcript_to_srt <- function(transcript,
     srt_lines <- c(srt_lines, as.character(i))
 
     # Timestamp line
-    start_time <- assemblyai_format_srt_timestamp(segments$start[i])
-    end_time <- assemblyai_format_srt_timestamp(segments$end[i])
+    start_time <- format_srt_timestamp(segments$start[i])
+    end_time <- format_srt_timestamp(segments$end[i])
     srt_lines <- c(srt_lines, paste(start_time, "-->", end_time))
 
     # Subtitle text
     text <- segments$text[i]
     if (include_speakers && !is.na(segments$speaker[i])) {
-      text <- paste0("[Speaker ", segments$speaker[i], "] ", text)
+      text <- paste0(speaker_label(segments$speaker[i]), " ", text)
     }
     srt_lines <- c(srt_lines, text)
 
@@ -505,112 +537,6 @@ assemblyai_transcript_to_txt <- function(transcript,
 }
 
 
-#' Create subtitle segments from words (AssemblyAI version)
-#'
-#' Internal function to group words into appropriate subtitle segments.
-#'
-#' @keywords internal
-assemblyai_create_subtitle_segments <- function(words, max_chars, max_duration) {
-
-  segments <- list()
-  current_segment <- list(
-    text = character(),
-    start = NA,
-    end = NA,
-    speaker = NA_character_
-  )
-
-  for (i in seq_len(nrow(words))) {
-    word <- words[i, ]
-
-    # Skip if no timing info
-    if (is.na(word$start) || is.na(word$end)) {
-      next
-    }
-
-    # Initialize first segment
-    if (is.na(current_segment$start)) {
-      current_segment$start <- word$start
-      current_segment$speaker <- word$speaker
-    }
-
-    # Calculate what the segment would be with this word added
-    new_text <- paste(c(current_segment$text, word$text), collapse = " ")
-    new_duration <- word$end - current_segment$start
-
-    # Check if we need to start a new segment
-    speaker_changed <- !is.na(word$speaker) &&
-                      !is.na(current_segment$speaker) &&
-                      word$speaker != current_segment$speaker
-
-    if (nchar(new_text) > max_chars ||
-        new_duration > max_duration ||
-        speaker_changed) {
-
-      # Save current segment if it has content
-      if (length(current_segment$text) > 0) {
-        segments[[length(segments) + 1]] <- list(
-          text = paste(current_segment$text, collapse = " "),
-          start = current_segment$start,
-          end = current_segment$end,
-          speaker = current_segment$speaker
-        )
-      }
-
-      # Start new segment
-      current_segment <- list(
-        text = word$text,
-        start = word$start,
-        end = word$end,
-        speaker = word$speaker
-      )
-    } else {
-      # Add word to current segment
-      current_segment$text <- c(current_segment$text, word$text)
-      current_segment$end <- word$end
-    }
-  }
-
-  # Add final segment
-  if (length(current_segment$text) > 0) {
-    segments[[length(segments) + 1]] <- list(
-      text = paste(current_segment$text, collapse = " "),
-      start = current_segment$start,
-      end = current_segment$end,
-      speaker = current_segment$speaker
-    )
-  }
-
-  # Convert to data frame
-  do.call(rbind, lapply(segments, function(s) {
-    data.frame(
-      text = s$text,
-      start = s$start,
-      end = s$end,
-      speaker = s$speaker,
-      stringsAsFactors = FALSE
-    )
-  }))
-}
-
-
-#' Format timestamp for SRT format (AssemblyAI version)
-#'
-#' @keywords internal
-assemblyai_format_srt_timestamp <- function(seconds) {
-  if (is.na(seconds)) {
-    return("00:00:00,000")
-  }
-
-  hours <- floor(seconds / 3600)
-  minutes <- floor((seconds %% 3600) / 60)
-  secs <- floor(seconds %% 60)
-  millis <- round((seconds - floor(seconds)) * 1000)
-
-  sprintf("%02d:%02d:%02d,%03d", hours, minutes, secs, millis)
-}
-
-
 #' Format text from utterances
 #'
 #' @keywords internal
@@ -620,14 +546,14 @@ assemblyai_format_text_from_utterances <- function(utterances,
   lines <- character()
 
   for (utt in utterances) {
-    prefix <- paste0("[Speaker ", utt$speaker, "]")
+    prefix <- speaker_label(utt$speaker)
 
     if (include_timestamps && !is.null(utt$start)) {
       start_sec <- utt$start / 1000  # Convert ms to seconds
       if (timestamp_format == "seconds") {
         prefix <- paste0(prefix, " (", round(start_sec, 2), "s)")
       } else {
-        prefix <- paste0(prefix, " (", assemblyai_format_time_timestamp(start_sec), ")")
+        prefix <- paste0(prefix, " (", format_time_timestamp(start_sec), ")")
       }
     }
 
@@ -674,12 +600,12 @@ assemblyai_format_text_from_words <- function(words,
       current_speaker <- word$speaker
 
       # Add timestamp if requested
-      prefix <- paste0("[Speaker ", current_speaker, "]")
+      prefix <- speaker_label(current_speaker)
       if (include_timestamps && !is.na(word$start)) {
         if (timestamp_format == "seconds") {
           prefix <- paste0(prefix, " (", round(word$start, 2), "s)")
         } else {
-          prefix <- paste0(prefix, " (", assemblyai_format_time_timestamp(word$start), ")")
+          prefix <- paste0(prefix, " (", format_time_timestamp(word$start), ")")
         }
       }
 
@@ -695,26 +621,6 @@ assemblyai_format_text_from_words <- function(words,
   }
 
   paste(lines, collapse = "\n\n")
-}
-
-
-#' Format timestamp for readable time format (AssemblyAI version)
-#'
-#' @keywords internal
-assemblyai_format_time_timestamp <- function(seconds) {
-  if (is.na(seconds)) {
-    return("00:00:00")
-  }
-
-  hours <- floor(seconds / 3600)
-  minutes <- floor((seconds %% 3600) / 60)
-  secs <- floor(seconds %% 60)
-
-  if (hours > 0) {
-    sprintf("%02d:%02d:%02d", hours, minutes, secs)
-  } else {
-    sprintf("%02d:%02d", minutes, secs)
-  }
 }
 
 

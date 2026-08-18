@@ -1,7 +1,7 @@
 Package: speech2textR
 Type: Package
 Title: Speech to Text API Wrappers and a Video Viewing App
-Version: 0.2.0
+Version: 0.2.1
 Authors@R: person(given = "Sharon", 
                   family = "Machlis", 
                   email = "DoMoreWithR@machlis.com", 

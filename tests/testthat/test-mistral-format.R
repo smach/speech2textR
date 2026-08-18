@@ -1,91 +1,3 @@
-test_that("SRT timestamps are formatted correctly", {
-  expect_equal(mistral_format_srt_timestamp(0), "00:00:00,000")
-  expect_equal(mistral_format_srt_timestamp(0.8), "00:00:00,800")
-  expect_equal(mistral_format_srt_timestamp(61.25), "00:01:01,250")
-  expect_equal(mistral_format_srt_timestamp(3661.5), "01:01:01,500")
-  expect_equal(mistral_format_srt_timestamp(NA), "00:00:00,000")
-})
-
-
-test_that("readable timestamps drop the hour when there is none", {
-  expect_equal(mistral_format_time_timestamp(0), "00:00")
-  expect_equal(mistral_format_time_timestamp(123), "02:03")
-  expect_equal(mistral_format_time_timestamp(3723), "01:02:03")
-  expect_equal(mistral_format_time_timestamp(NA), "00:00:00")
-})
-
-
-test_that("speaker labels avoid stuttering on Mistral ids", {
-  expect_equal(mistral_speaker_label("speaker_0"), "[speaker_0]")
-  expect_equal(mistral_speaker_label("A"), "[Speaker A]")
-})
-
-
-test_that("subtitle segments split on the character limit", {
-  words <- data.frame(
-    text = c("one", "two", "three", "four", "five"),
-    start = c(0, 1, 2, 3, 4),
-    end = c(1, 2, 3, 4, 5),
-    speaker_id = NA_character_,
-    stringsAsFactors = FALSE
-  )
-
-  segments <- mistral_create_subtitle_segments(words, max_chars = 10, max_duration = 100)
-
-  expect_gt(nrow(segments), 1)
-  expect_true(all(nchar(segments$text) <= 10))
-  expect_equal(paste(segments$text, collapse = " "), "one two three four five")
-})
-
-
-test_that("subtitle segments split on the duration limit", {
-  words <- data.frame(
-    text = c("a", "b", "c", "d"),
-    start = c(0, 5, 10, 15),
-    end = c(5, 10, 15, 20),
-    speaker_id = NA_character_,
-    stringsAsFactors = FALSE
-  )
-
-  segments <- mistral_create_subtitle_segments(words, max_chars = 1000, max_duration = 7)
-
-  expect_gt(nrow(segments), 1)
-  expect_true(all(segments$end - segments$start <= 7))
-})
-
-
-test_that("subtitle segments split when the speaker changes", {
-  words <- data.frame(
-    text = c("hi", "there", "hello", "back"),
-    start = c(0, 0.5, 1, 1.5),
-    end = c(0.5, 1, 1.5, 2),
-    speaker_id = c("speaker_0", "speaker_0", "speaker_1", "speaker_1"),
-    stringsAsFactors = FALSE
-  )
-
-  segments <- mistral_create_subtitle_segments(words, max_chars = 1000, max_duration = 100)
-
-  expect_equal(nrow(segments), 2)
-  expect_equal(segments$text, c("hi there", "hello back"))
-  expect_equal(segments$speaker_id, c("speaker_0", "speaker_1"))
-})
-
-
-test_that("words without timings are skipped", {
-  words <- data.frame(
-    text = c("kept", "dropped", "kept"),
-    start = c(0, NA, 2),
-    end = c(1, NA, 3),
-    speaker_id = NA_character_,
-    stringsAsFactors = FALSE
-  )
-
-  segments <- mistral_create_subtitle_segments(words, max_chars = 1000, max_duration = 100)
-
-  expect_equal(segments$text, "kept kept")
-})
-
-
 test_that("SRT output is well formed", {
   srt <- mistral_transcript_to_srt(mistral_test_transcript())
   lines <- strsplit(srt, "\n", fixed = TRUE)[[1]]
@@ -129,7 +41,7 @@ test_that("word-level captions do not pick up doubled spaces", {
     timestamps = "word"
   )
 
-  segments <- mistral_create_subtitle_segments(
+  segments <- create_subtitle_segments(
     transcript$words,
     max_chars = 42,
     max_duration = 7

@@ -4,7 +4,13 @@
 \alias{assemblyai_get_transcript}
 \title{Poll for transcription completion}
 \usage{
-assemblyai_get_transcript(transcript_id, api_key, verbose = TRUE)
+assemblyai_get_transcript(
+  transcript_id,
+  api_key,
+  verbose = TRUE,
+  poll_interval = 3,
+  timeout = 3600
+)
 }
 \arguments{
 \item{transcript_id}{Character string. The transcript ID.}
@@ -12,11 +18,22 @@ assemblyai_get_transcript(transcript_id, api_key, verbose = TRUE)
 \item{api_key}{Character string. AssemblyAI API key.}
 
 \item{verbose}{Logical. If TRUE, prints progress messages.}
+
+\item{poll_interval}{Numeric. Seconds to wait between status checks.
+Default is 3.}
+
+\item{timeout}{Numeric. Give up after this many seconds. Default is 3600
+(one hour). Use Inf to wait indefinitely.}
 }
 \value{
 List containing the completed transcript data.
 }
 \description{
 Internal function to poll the AssemblyAI API until transcription is complete.
+}
+\details{
+Gives up rather than blocking the session forever if a job never leaves the
+queue. The transcript ID is included in the error so a job that is merely
+slow can still be collected later with another call.
 }
 \keyword{internal}
