@@ -8,7 +8,7 @@ The ElevenLabs API has been my favorite, but the Mistral model (recommended by s
 
 Mistral is also the least expensive of the three, and it accepts recordings up to about three hours in a single request, so it's a good choice for long files.
 
-The `edit_subtitles_standalone("your_video.mp4", "your_subtitles.srt")` function launches a Node.js app that lets you watch your video on the left and edit the caption file on the right. You need node.js installed on your local computer for the editing app to work. However, if you want a truly robust application to edit captions, please check out [CADET (Caption and Description Editing Tool)](https://www.wgbh.org/foundation/services/ncam/tools-resources/cadet) from the National Center for Accessible Media (NCAM) based at public media creator GBH.
+The `edit_subtitles_standalone("your_video.mp4", "your_subtitles.srt")` function launches a Node.js app that lets you watch your video on the left and edit the caption file on the right. You need node.js installed on your local computer for the editing app to work. If you want a more robust application to edit captions, please check out [CADET (Caption and Description Editing Tool)](https://www.wgbh.org/foundation/services/ncam/tools-resources/cadet) from the National Center for Accessible Media (NCAM) based at public media creator GBH. However, be advised that CADET explicitly required Node.js version 22 _or earlier_.
 
 Note that this package is doing what I want it to do, but I haven't tested out all the functionality. You're welcome to use it too, but use at your own risk!
 
